@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life Hub">
+<title>Life Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --surface3: #252525;
+    --accent: #4a90d9;
+    --accent-dim: rgba(74,144,217,0.15);
+    --accent-glow: rgba(74,144,217,0.25);
+    --green: #3dbd6e;
+    --green-dim: rgba(61,189,110,0.15);
+    --red: #e05252;
+    --text: #e8e8e8;
+    --text2: #999;
+    --text3: #5a5a5a;
+    --border: rgba(255,255,255,0.06);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overscroll-behavior: none; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* ── LAYOUT ── */
+  .app { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+  .header { padding: 20px 0 12px; display: flex; align-items: baseline; gap: 10px; }
+  .header-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .header-date { font-size: 12px; color: var(--text2); font-weight: 400; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border-radius: 10px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; }
+  .tab { flex: 1; padding: 9px 0; text-align: center; font-size: 13px; font-weight: 500; color: var(--text2); border-radius: 7px; cursor: pointer; transition: all 0.2s; background: transparent; border: none; }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  /* ── PANELS ── */
+  .panel { display: none; padding-bottom: 40px; }
+  .panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; border: 1px solid var(--border); }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); margin-bottom: 12px; }
+
+  /* ── WHY BOX ── */
+  .why-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; line-height: 1.6; color: var(--text); min-height: 52px; cursor: pointer; }
+  .why-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; line-height: 1.6; resize: none; min-height: 80px; outline: none; }
+  .why-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
+
+  /* ── BUTTONS ── */
+  .btn { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { opacity: 0.8; }
+  .btn-ghost { background: var(--surface3); color: var(--text2); }
+  .btn-ghost:active { opacity: 0.7; }
+  .btn-icon { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 4px 6px; border-radius: 6px; }
+  .btn-icon:active { background: var(--surface3); }
+
+  /* ── AI CONTENT ── */
+  .ai-loading { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 14px; padding: 8px 0; }
+  .dot-spin { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--accent-dim); border-top-color: var(--accent); animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .quote-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; line-height: 1.65; color: var(--text); margin-bottom: 6px; }
+  .quote-author { font-size: 12px; color: var(--accent); font-weight: 500; }
+
+  .word-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .word-type { font-size: 11px; color: var(--accent); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .word-def { font-size: 14px; color: var(--text2); line-height: 1.55; }
+
+  .challenge-text { font-size: 15px; color: var(--text); line-height: 1.6; }
+  .ai-divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── HABITS ── */
+  .habit-item { display: flex; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px; user-select: none; }
+  .habit-item:last-child { border-bottom: none; }
+  .habit-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .habit-check.done { background: var(--green); border-color: var(--green); }
+  .habit-check.done::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 700; }
+  .habit-label { font-size: 15px; color: var(--text); flex: 1; }
+  .habit-item.done .habit-label { color: var(--text3); text-decoration: line-through; }
+
+  /* ── SCHEDULE ── */
+  .schedule-add { display: flex; gap: 8px; margin-bottom: 12px; }
+  .input-time { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; width: 90px; outline: none; }
+  .input-task { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+  .input-time:focus, .input-task:focus { border-color: var(--accent); }
+  .schedule-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .schedule-item:last-child { border-bottom: none; }
+  .schedule-time { font-size: 12px; color: var(--accent); font-weight: 600; min-width: 42px; }
+  .schedule-task { flex: 1; font-size: 14px; color: var(--text); }
+  .schedule-empty { font-size: 14px; color: var(--text3); text-align: center; padding: 16px 0; }
+
+  /* ── JOURNAL ── */
+  .journal-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.65; resize: none; min-height: 120px; outline: none; }
+  .journal-textarea:focus { border-color: var(--accent); }
+  .save-row { display: flex; justify-content: flex-end; margin-top: 8px; align-items: center; gap: 10px; }
+  .save-status { font-size: 12px; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+  .save-status.show { opacity: 1; }
+
+  /* ── CALENDAR ── */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-nav-btn { background: var(--surface2); border: none; color: var(--text); font-size: 18px; cursor: pointer; padding: 6px 12px; border-radius: 8px; }
+  .cal-month-label { font-size: 16px; font-weight: 600; color: var(--text); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-dow { text-align: center; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; padding: 4px 0 6px; letter-spacing: 0.5px; }
+  .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 9px; cursor: pointer; position: relative; font-size: 14px; color: var(--text2); transition: background 0.15s; gap: 2px; }
+  .cal-day:hover { background: var(--surface2); }
+  .cal-day.today { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .cal-day.selected { background: var(--accent); color: #fff; }
+  .cal-day.other-month { color: var(--text3); }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+  .cal-day.selected .cal-dot { background: rgba(255,255,255,0.7); }
+
+  /* ── DAY DETAIL ── */
+  .day-detail { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-top: 14px; border: 1px solid var(--border); animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .detail-date { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .detail-section { margin-bottom: 14px; }
+  .detail-section-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .detail-habit-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; }
+  .detail-habit-row .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .detail-habit-row .dot.done { background: var(--green); }
+  .detail-habit-row .dot.miss { background: var(--text3); }
+  .detail-sched-row { font-size: 13px; color: var(--text); padding: 3px 0; }
+  .detail-sched-row span { color: var(--accent); font-weight: 600; margin-right: 6px; }
+  .detail-note { font-size: 13px; color: var(--text2); line-height: 1.6; font-style: italic; }
+  .detail-empty { font-size: 13px; color: var(--text3); }
+
+  /* ── PROGRESS ── */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .stat-box { flex: 1; background: var(--surface2); border-radius: 10px; padding: 14px 12px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; font-weight: 500; }
+
+  .bar14 { display: flex; gap: 4px; align-items: flex-end; height: 56px; margin-bottom: 6px; }
+  .bar14-col { flex: 1; border-radius: 4px 4px 0 0; transition: height 0.3s; min-height: 4px; }
+  .bar14-col.full { background: var(--green); }
+  .bar14-col.partial { background: var(--accent); }
+  .bar14-col.empty { background: var(--surface3); }
+  .bar14-labels { display: flex; justify-content: space-between; margin-bottom: 14px; }
+  .bar14-label { font-size: 9px; color: var(--text3); }
+
+  .habit-progress { margin-bottom: 10px; }
+  .habit-prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .habit-prog-name { font-size: 13px; color: var(--text); width: 100px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .progress-track { flex: 1; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+  .habit-prog-pct { font-size: 12px; color: var(--text2); width: 32px; text-align: right; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">Life Hub</div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today')">Today</button>
+    <button class="tab" onclick="switchTab('calendar')">Calendar</button>
+    <button class="tab" onclick="switchTab('progress')">Progress</button>
+  </div>
+
+  <!-- TODAY -->
+  <div class="panel active" id="panel-today">
+
+    <!-- YOUR WHY -->
+    <div class="card" id="whyCard">
+      <div class="card-title">Your Why</div>
+      <div class="why-text" id="whyDisplay" onclick="editWhy()"></div>
+      <div id="whyEdit" style="display:none">
+        <textarea class="why-textarea" id="whyInput" placeholder="What drives you forward?"></textarea>
+        <div class="why-actions">
+          <button class="btn btn-ghost" onclick="cancelWhy()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveWhy()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI DAILY CONTENT -->
+    <div class="card" id="aiCard">
+      <div class="card-title">Daily Wisdom</div>
+      <div id="aiContent">
+        <div class="ai-loading"><div class="dot-spin"></div>Generating today's content…</div>
+      </div>
+    </div>
+
+    <!-- HABITS -->
+    <div class="card">
+      <div class="card-title">Habits</div>
+      <div id="habitList"></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="card">
+      <div class="card-title">Daily Schedule</div>
+      <div class="schedule-add">
+        <input type="time" class="input-time" id="schedTime">
+        <input type="text" class="input-task" id="schedTask" placeholder="Add a task…">
+        <button class="btn btn-primary" onclick="addScheduleItem()">+</button>
+      </div>
+      <div id="scheduleList"></div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div class="card">
+      <div class="card-title">Daily Note</div>
+      <textarea class="journal-textarea" id="journalArea" placeholder="How are you showing up today?"></textarea>
+      <div class="save-row">
+        <span class="save-status" id="journalStatus">Saved ✓</span>
+        <button class="btn btn-primary" onclick="saveJournal()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="panel" id="panel-calendar">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+        <div class="cal-month-label" id="calMonthLabel"></div>
+        <button class="cal-nav-btn" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div id="dayDetail"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="streakNum">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="perfectNum">0</div>
+        <div class="stat-label">Perfect Days</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="weekPct">0%</div>
+        <div class="stat-label">This Week</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">14-Day Overview</div>
+      <div class="bar14" id="bar14"></div>
+      <div class="bar14-labels" id="bar14Labels"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Habit Breakdown (14 days)</div>
+      <div id="habitBreakdown"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS & HELPERS
+// ═══════════════════════════════════════════
+const WEEKDAY_HABITS = ['6AM Wake Up','Meal 1','Meal 2','Meal 3','Workout','Run','No PH'];
+const WEEKEND_HABITS = ['No PH'];
+const DAYS_OF_WEEK = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function todayKey() { return formatDate(new Date()); }
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function parseKey(k) {
+  const [y,m,d] = k.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function isWeekend(d) { const dow = d.getDay(); return dow === 0 || dow === 6; }
+function habitsForDate(d) { return isWeekend(d) ? WEEKEND_HABITS : WEEKDAY_HABITS; }
+
+function loadDay(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+function saveDay(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+function patchDay(key, patch) {
+  const d = loadDay(key);
+  Object.assign(d, patch);
+  saveDay(key, d);
+}
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name === 'calendar') renderCalendar();
+  if (name === 'progress') renderProgress();
+}
+
+// ═══════════════════════════════════════════
+// HEADER DATE
+// ═══════════════════════════════════════════
+function initHeader() {
+  const now = new Date();
+  const opts = { weekday:'long', month:'long', day:'numeric' };
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('en-US', opts);
+}
+
+// ═══════════════════════════════════════════
+// YOUR WHY
+// ═══════════════════════════════════════════
+function loadWhy() {
+  const why = localStorage.getItem('why') || '';
+  const el = document.getElementById('whyDisplay');
+  el.textContent = why || 'Tap to add your reason for waking up each day…';
+  if (!why) el.style.color = 'var(--text3)';
+  else el.style.color = 'var(--text)';
+}
+function editWhy() {
+  document.getElementById('whyDisplay').style.display = 'none';
+  document.getElementById('whyEdit').style.display = 'block';
+  document.getElementById('whyInput').value = localStorage.getItem('why') || '';
+  document.getElementById('whyInput').focus();
+}
+function saveWhy() {
+  const val = document.getElementById('whyInput').value.trim();
+  if (val) localStorage.setItem('why', val);
+  document.getElementById('whyEdit').style.display = 'none';
+  document.getElementById('whyDisplay').style.display = 'block';
+  loadWhy();
+}
+function cancelWhy() {
+  document.getElementById('whyEdit').style.display = 'none';
+  document.getElementById('whyDisplay').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════
+// AI DAILY CONTENT
+// ═══════════════════════════════════════════
+async function loadAIContent() {
+  const key = 'ai_' + todayKey();
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    try { renderAI(JSON.parse(cached)); return; } catch {}
+  }
+  // Generate fresh
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a daily wisdom generator for a 19-year-old man focused on self-improvement. He values stoicism, Marcus Aurelius, discipline, and building a better life every day.
+
+Respond ONLY with valid JSON in this exact structure, no preamble or markdown:
+{
+  "quote": "the quote text",
+  "author": "Author Name",
+  "word": "theword",
+  "wordType": "noun/verb/adjective",
+  "definition": "clear definition in one sentence",
+  "challenge": "a concrete, actionable daily challenge in 1-2 sentences"
+}`,
+        messages: [{ role: 'user', content: `Generate today's stoic quote of the day (from Marcus Aurelius or other stoics), a powerful word of the day with definition, and a specific daily challenge. Today is ${new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}.` }]
+      })
+    });
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    const raw = data.content[0].text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    localStorage.setItem(key, JSON.stringify(parsed));
+    renderAI(parsed);
+  } catch(e) {
+    document.getElementById('aiContent').innerHTML = `<div style="color:var(--text3);font-size:13px;">Could not load daily content. Add your API key to use this feature.</div>`;
+  }
+}
+
+function renderAI(d) {
+  document.getElementById('aiContent').innerHTML = `
+    <div class="quote-text">"${d.quote}"</div>
+    <div class="quote-author">— ${d.author}</div>
+    <div class="ai-divider"></div>
+    <div class="word-title">${d.word}</div>
+    <div class="word-type">${d.wordType}</div>
+    <div class="word-def">${d.definition}</div>
+    <div class="ai-divider"></div>
+    <div class="card-title" style="margin-bottom:8px;">Today's Challenge</div>
+    <div class="challenge-text">${d.challenge}</div>
+  `;
+}
+
+// ═══════════════════════════════════════════
+// HABITS
+// ═══════════════════════════════════════════
+function renderHabits() {
+  const key = todayKey();
+  const data = loadDay(key);
+  const habits = habitsForDate(new Date());
+  const done = data.habits || {};
+  const list = document.getElementById('habitList');
+  list.innerHTML = habits.map(h => `
+    <div class="habit-item ${done[h] ? 'done' : ''}" onclick="toggleHabit('${h}')">
+      <div class="habit-check ${done[h] ? 'done' : ''}"></div>
+      <div class="habit-label">${h}</div>
+    </div>
+  `).join('');
+}
+function toggleHabit(name) {
+  const key = todayKey();
+  const data = loadDay(key);
+  if (!data.habits) data.habits = {};
+  data.habits[name] = !data.habits[name];
+  saveDay(key, data);
+  renderHabits();
+}
+
+// ═══════════════════════════════════════════
+// SCHEDULE
+// ═══════════════════════════════════════════
+function renderSchedule() {
+  const key = todayKey();
+  const data = loadDay(key);
+  const items = (data.schedule || []).sort((a,b) => a.time.localeCompare(b.time));
+  const list = document.getElementById('scheduleList');
+  if (!items.length) {
+    list.innerHTML = `<div class="schedule-empty">No items yet. Add your first task above.</div>`;
+    return;
+  }
+  list.innerHTML = items.map((item, i) => `
+    <div class="schedule-item">
+      <div class="schedule-time">${fmtTime(item.time)}</div>
+      <div class="schedule-task">${item.task}</div>
+      <button class="btn-icon" onclick="deleteScheduleItem(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function fmtTime(t) {
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const hr = h % 12 || 12;
+  return `${hr}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function addScheduleItem() {
+  const time = document.getElementById('schedTime').value;
+  const task = document.getElementById('schedTask').value.trim();
+  if (!time || !task) return;
+  const key = todayKey();
+  const data = loadDay(key);
+  if (!data.schedule) data.schedule = [];
+  data.schedule.push({ time, task });
+  saveDay(key, data);
+  document.getElementById('schedTask').value = '';
+  document.getElementById('schedTime').value = '';
+  renderSchedule();
+}
+function deleteScheduleItem(idx) {
+  const key = todayKey();
+  const data = loadDay(key);
+  const items = (data.schedule || []).sort((a,b) => a.time.localeCompare(b.time));
+  items.splice(idx, 1);
+  data.schedule = items;
+  saveDay(key, data);
+  renderSchedule();
+}
+document.getElementById('schedTask').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addScheduleItem();
+});
+
+// ═══════════════════════════════════════════
+// JOURNAL
+// ═══════════════════════════════════════════
+function loadJournal() {
+  const data = loadDay(todayKey());
+  document.getElementById('journalArea').value = data.note || '';
+}
+function saveJournal() {
+  const note = document.getElementById('journalArea').value;
+  patchDay(todayKey(), { note });
+  const s = document.getElementById('journalStatus');
+  s.classList.add('show');
+  setTimeout(() => s.classList.remove('show'), 2000);
+}
+document.getElementById('journalArea').addEventListener('input', () => {
+  clearTimeout(window._journalTimer);
+  window._journalTimer = setTimeout(saveJournal, 1500);
+});
+
+// ═══════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calSelected = null;
+
+function renderCalendar() {
+  document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
+  const grid = document.getElementById('calGrid');
+  const dows = ['S','M','T','W','T','F','S'];
+  const today = todayKey();
+
+  // Header
+  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  const first = new Date(calYear, calMonth, 1);
+  const last = new Date(calYear, calMonth+1, 0);
+  const startDow = first.getDay();
+
+  // Prev month fill
+  for (let i = 0; i < startDow; i++) {
+    const d = new Date(calYear, calMonth, -startDow+i+1);
+    html += `<div class="cal-day other-month">${d.getDate()}</div>`;
+  }
+
+  // Current month
+  for (let day = 1; day <= last.getDate(); day++) {
+    const d = new Date(calYear, calMonth, day);
+    const key = formatDate(d);
+    const data = loadDay(key);
+    const habits = habitsForDate(d);
+    const done = data.habits || {};
+    const hasActivity = habits.some(h => done[h]);
+    const isToday = key === today;
+    const isSel = key === calSelected;
+    html += `<div class="cal-day ${isToday&&!isSel?'today':''} ${isSel?'selected':''}" onclick="calSelectDay('${key}')">
+      ${day}
+      ${hasActivity ? '<div class="cal-dot"></div>' : '<div style="width:5px;height:5px"></div>'}
+    </div>`;
+  }
+
+  // Next month fill
+  const endDow = last.getDay();
+  for (let i = 1; i < 7 - endDow; i++) {
+    html += `<div class="cal-day other-month">${i}</div>`;
+  }
+
+  grid.innerHTML = html;
+  renderDayDetail();
+}
+
+function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function calSelectDay(key) {
+  calSelected = (calSelected === key) ? null : key;
+  renderCalendar();
+}
+
+function renderDayDetail() {
+  const el = document.getElementById('dayDetail');
+  if (!calSelected) { el.innerHTML = ''; return; }
+  const d = parseKey(calSelected);
+  const data = loadDay(calSelected);
+  const habits = habitsForDate(d);
+  const done = data.habits || {};
+  const schedule = (data.schedule || []).sort((a,b) => a.time.localeCompare(b.time));
+  const note = data.note || '';
+
+  const habitRows = habits.map(h => `
+    <div class="detail-habit-row">
+      <div class="dot ${done[h]?'done':'miss'}"></div>
+      <span style="color:${done[h]?'var(--text)':'var(--text3)'}">${h}</span>
+    </div>`).join('');
+
+  const schedRows = schedule.length
+    ? schedule.map(s => `<div class="detail-sched-row"><span>${fmtTime(s.time)}</span>${s.task}</div>`).join('')
+    : `<div class="detail-empty">No schedule items.</div>`;
+
+  const opts = { weekday:'long', month:'long', day:'numeric', year:'numeric' };
+  el.innerHTML = `
+    <div class="day-detail">
+      <div class="detail-date">${d.toLocaleDateString('en-US', opts)}</div>
+      <div class="detail-section">
+        <div class="detail-section-title">Habits</div>
+        ${habitRows}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Schedule</div>
+        ${schedRows}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Note</div>
+        ${note ? `<div class="detail-note">${note}</div>` : `<div class="detail-empty">No note written.</div>`}
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════
+function renderProgress() {
+  const today = new Date();
+  const todayK = todayKey();
+
+  // Build last 14 days
+  const days14 = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days14.push({ key: formatDate(d), d });
+  }
+
+  // Per-day completion
+  function dayCompletion(key, d) {
+    const data = loadDay(key);
+    const habits = habitsForDate(d);
+    const done = data.habits || {};
+    const count = habits.filter(h => done[h]).length;
+    return { count, total: habits.length, pct: habits.length ? count / habits.length : 0 };
+  }
+
+  // Streak
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const k = formatDate(d);
+    const { pct } = dayCompletion(k, d);
+    if (pct > 0) streak++;
+    else break;
+  }
+
+  // Perfect days (14)
+  const perfectDays = days14.filter(({ key, d }) => {
+    const { count, total } = dayCompletion(key, d);
+    return total > 0 && count === total;
+  }).length;
+
+  // This week %
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+  let weekTotal = 0, weekDone = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+    if (d > today) break;
+    const { count, total } = dayCompletion(formatDate(d), d);
+    weekTotal += total; weekDone += count;
+  }
+  const weekPct = weekTotal ? Math.round(weekDone / weekTotal * 100) : 0;
+
+  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('perfectNum').textContent = perfectDays;
+  document.getElementById('weekPct').textContent = weekPct + '%';
+
+  // 14-day bar chart
+  const bar14 = document.getElementById('bar14');
+  const bar14Labels = document.getElementById('bar14Labels');
+  bar14.innerHTML = days14.map(({ key, d }) => {
+    const { pct } = dayCompletion(key, d);
+    const cls = pct === 0 ? 'empty' : pct < 1 ? 'partial' : 'full';
+    const h = Math.max(4, Math.round(pct * 56));
+    return `<div class="bar14-col ${cls}" style="height:${h}px"></div>`;
+  }).join('');
+  // Labels: show first and last day
+  const first = days14[0].d;
+  const last = days14[days14.length-1].d;
+  bar14Labels.innerHTML = `<span class="bar14-label">${first.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span><span class="bar14-label">${last.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`;
+
+  // Habit breakdown
+  const allHabits = [...new Set(days14.flatMap(({ key, d }) => habitsForDate(d)))];
+  const breakdown = document.getElementById('habitBreakdown');
+  breakdown.innerHTML = allHabits.map(h => {
+    const relevant = days14.filter(({ d }) => habitsForDate(d).includes(h));
+    const done = relevant.filter(({ key }) => {
+      const data = loadDay(key);
+      return (data.habits || {})[h];
+    }).length;
+    const pct = relevant.length ? Math.round(done / relevant.length * 100) : 0;
+    return `<div class="habit-prog-row">
+      <div class="habit-prog-name" title="${h}">${h}</div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="habit-prog-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init() {
+  initHeader();
+  loadWhy();
+  loadAIContent();
+  renderHabits();
+  renderSchedule();
+  loadJournal();
+}
+
+init();
+</script>
+</body>
+</html>
